@@ -1,0 +1,18 @@
+- id: REL-001
+  title: Multi-zone failure tolerance for prod high availability
+  category: reliability
+  priority: P0
+  confidence: 0.75
+  when:
+    all:
+      - field: environment
+        op: eq
+        value: prod
+      - field: availability_target
+        op: in
+        value: ["high", "mission_critical"]
+  recommendation: Deploy across multiple failure domains with health checks and automated failover.
+  rationale: High availability targets require tolerance to single-zone failures.
+  tradeoffs:
+    - Higher cost due to redundancy.
+    - More components to operate.

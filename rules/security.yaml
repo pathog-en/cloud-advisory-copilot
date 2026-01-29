@@ -1,0 +1,29 @@
+- id: SEC-001
+  title: Least-privilege by default
+  category: security
+  priority: P0
+  confidence: 0.8
+  when:
+    any:
+      - field: environment
+        op: in
+        value: ["dev", "staging", "prod"]
+  recommendation: Use role-based access control with least privilege and short-lived credentials.
+  rationale: Access control mistakes are a top cause of cloud incidents.
+  tradeoffs:
+    - Requires periodic access reviews and tighter identity hygiene.
+
+- id: SEC-002
+  title: Encrypt data in transit and at rest
+  category: security
+  priority: P0
+  confidence: 0.85
+  when:
+    any:
+      - field: data_sensitivity
+        op: in
+        value: ["internal", "confidential", "regulated"]
+  recommendation: Use TLS everywhere and encrypt storage at rest with managed keys where possible.
+  rationale: Encryption reduces breach impact and is commonly required for sensitive data.
+  tradeoffs:
+    - Key management adds operational overhead.

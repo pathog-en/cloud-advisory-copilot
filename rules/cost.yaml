@@ -1,0 +1,15 @@
+- id: COST-001
+  title: Elastic scaling for spiky traffic
+  category: cost
+  priority: P1
+  confidence: 0.7
+  when:
+    any:
+      - field: traffic_profile
+        op: eq
+        value: spiky
+  recommendation: Prefer autoscaling or serverless-style execution to match demand and reduce idle cost.
+  rationale: Spiky demand makes fixed capacity wasteful or unreliable.
+  tradeoffs:
+    - Cold starts (for some serverless patterns).
+    - Stateful workloads need extra design.
