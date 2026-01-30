@@ -12,6 +12,9 @@
   rationale: Access control mistakes are a top cause of cloud incidents.
   tradeoffs:
     - Requires periodic access reviews and tighter identity hygiene.
+  score_delta:
+    security: +8
+    operations: -2
 
 - id: SEC-002
   title: Encrypt data in transit and at rest
@@ -27,3 +30,6 @@
   rationale: Encryption reduces breach impact and is commonly required for sensitive data.
   tradeoffs:
     - Key management adds operational overhead.
+  score_delta:
+    security: +6
+    operations: +2

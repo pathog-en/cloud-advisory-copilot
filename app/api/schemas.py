@@ -95,3 +95,5 @@ class AssessmentResponse(BaseModel):
     scores: Scorecard
     recommendations: List[Recommendation]
     meta: Dict[str, Any] = Field(default_factory=dict)
+    trace: Optional[Dict[str, Any]] = None
+

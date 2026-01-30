@@ -13,3 +13,6 @@
   tradeoffs:
     - Cold starts (for some serverless patterns).
     - Stateful workloads need extra design.
+  score_delta:
+    cost: -8
+    operations: -2

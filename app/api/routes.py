@@ -1,77 +1,23 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from .schemas import AssessmentRequest, AssessmentResponse, Scorecard, Recommendation
+from .schemas import AssessmentRequest, AssessmentResponse, Scorecard
+
+from app.rules.loader import load_rules
+from app.core.engine import apply_rules_with_scoring
 
 router = APIRouter()
 
 
 def baseline_scores() -> Scorecard:
-    # Day 1: static baseline, Day 3+: rules will adjust these
-    return Scorecard(cost=70, security=70, reliability=70, performance=70, operations=70)
-
-
-def stub_recommendations(req: AssessmentRequest) -> list[Recommendation]:
-    # Day 1: deterministic placeholders to prove API plumbing works.
-    recs: list[Recommendation] = []
-
-    # Always recommend "least privilege" + "encryption"
-    recs.append(
-        Recommendation(
-            id="SEC-001",
-            title="Default to least-privilege access controls",
-            category="security",
-            priority="P0",
-            confidence=0.80,
-            recommendation="Use role-based access with least privilege and short-lived credentials. Separate duties between humans, services, and CI/CD.",
-            rationale="Access control mistakes are one of the most common sources of cloud incidents.",
-            tradeoffs=["Requires disciplined identity management and periodic access reviews."],
-        )
+    # Day 3: baseline + rule-driven deltas
+    return Scorecard(
+        cost=70,
+        security=70,
+        reliability=70,
+        performance=70,
+        operations=70,
     )
-
-    recs.append(
-        Recommendation(
-            id="SEC-002",
-            title="Encrypt data in transit and at rest",
-            category="security",
-            priority="P0",
-            confidence=0.85,
-            recommendation="Use TLS for all service-to-service traffic and encryption-at-rest for object, block, and database storage.",
-            rationale="Encryption reduces breach impact and is commonly required for regulated or confidential data.",
-            tradeoffs=["Key management introduces operational overhead."],
-        )
-    )
-
-    # Simple condition-based advisory (still not YAML rules yet)
-    if req.environment == "prod" and req.availability_target in {"high", "mission_critical"}:
-        recs.append(
-            Recommendation(
-                id="REL-001",
-                title="Design for multi-zone failure tolerance",
-                category="reliability",
-                priority="P0",
-                confidence=0.75,
-                recommendation="Use redundant instances across failure domains (zones/availability sets), health checks, and automated failover patterns.",
-                rationale="High availability targets require tolerance to single-zone failures.",
-                tradeoffs=["Higher cost due to redundancy.", "More moving parts to operate."],
-            )
-        )
-
-    if req.traffic_profile == "spiky":
-        recs.append(
-            Recommendation(
-                id="COST-001",
-                title="Prefer elastic scaling patterns for spiky traffic",
-                category="cost",
-                priority="P1",
-                confidence=0.70,
-                recommendation="Use autoscaling or serverless-style execution to scale to zero/scale out rapidly, depending on latency needs.",
-                rationale="Spiky demand penalizes fixed-capacity deployments with idle cost or poor responsiveness.",
-                tradeoffs=["Cold starts (for some serverless patterns).", "Scaling complexity if stateful."],
-            )
-        )
-
-    return recs
 
 
 @router.get("/health")
@@ -81,25 +27,49 @@ def health():
 
 @router.get("/rules")
 def rules():
-    # Day 1: rules come on Day 2 (YAML loading)
-    return {"count": 0, "rules": []}
+    rules = load_rules()
+    return {
+        "count": len(rules),
+        "rules": [
+            {
+                "id": r.id,
+                "title": r.title,
+                "category": r.category,
+                "priority": r.priority,
+                "confidence": r.confidence,
+            }
+            for r in rules
+        ],
+    }
 
 
 @router.post("/assess", response_model=AssessmentResponse)
 def assess(request: AssessmentRequest) -> AssessmentResponse:
-    scores = baseline_scores()
-    recs = stub_recommendations(request)
+    rules = load_rules()
+    baseline = baseline_scores()
 
-    # Sort by priority (P0 first), then confidence desc
-    priority_order = {"P0": 0, "P1": 1, "P2": 2}
-    recs_sorted = sorted(recs, key=lambda r: (priority_order.get(r.priority, 9), -r.confidence))
+    # 🔑 Day 3 engine call (THIS is where Step 5.1 is used)
+    recs, updated_scores, trace = apply_rules_with_scoring(
+        request,
+        rules,
+        baseline,
+    )
+
+    # Trace is opt-in (keeps default response clean)
+    include_trace = (
+        isinstance(request.provider_hints, dict)
+        and request.provider_hints.get("trace") is True
+    )
 
     return AssessmentResponse(
         normalized_input=request,
-        scores=scores,
-        recommendations=recs_sorted,
+        scores=updated_scores,
+        recommendations=recs,
         meta={
-            "engine_version": "0.1.0-day1",
+            "engine_version": "0.3.0-day3",
             "cloud_agnostic": True,
+            "rules_loaded": len(rules),
+            "trace_enabled": include_trace,
         },
+        trace=trace if include_trace else None,
     )

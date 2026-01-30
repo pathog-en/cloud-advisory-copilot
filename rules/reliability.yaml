@@ -16,3 +16,7 @@
   tradeoffs:
     - Higher cost due to redundancy.
     - More components to operate.
+  score_delta:
+    reliability: +10
+    cost: -6
+    operations: -3
