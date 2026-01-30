@@ -6,6 +6,8 @@ A FastAPI-based advisory service that takes a workload intake form and returns a
 
  - Day 2 adds YAML rule loading and matching. (comp 01/28)
 
+ - Day 3 adds weighted scoring to the different scored components, produces a recommendation
+
 ## Run locally
 ```bash
 python -m venv .venv
