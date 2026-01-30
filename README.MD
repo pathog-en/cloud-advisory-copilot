@@ -14,5 +14,6 @@ python -m venv .venv
 # Windows PowerShell:
 . .venv\Scripts\Activate.ps1
 pip install - requirements.txt
-uvicorn app.main:app --reload#   c l o u d - a d v i s o r y - c o p i l o t  
+uvicorn app.main:app --reload#   c l o u d - a d v i s o r y - c o p i l o t 
+ 
  
