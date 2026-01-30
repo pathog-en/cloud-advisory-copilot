@@ -5,6 +5,8 @@ from .schemas import AssessmentRequest, AssessmentResponse, Scorecard
 
 from app.rules.loader import load_rules
 from app.core.engine import apply_rules_with_scoring
+from app.core.reporting import generate_markdown_report
+
 
 router = APIRouter()
 
@@ -73,3 +75,25 @@ def assess(request: AssessmentRequest) -> AssessmentResponse:
         },
         trace=trace if include_trace else None,
     )
+
+@router.post("/report")
+def report(request: AssessmentRequest):
+    rules = load_rules()
+    baseline = baseline_scores()
+
+    recs, updated_scores, _ = apply_rules_with_scoring(
+        request,
+        rules,
+        baseline,
+    )
+
+    markdown = generate_markdown_report(
+        input_data=request,
+        scores=updated_scores,
+        recommendations=recs,
+    )
+
+    return {
+        "format": "markdown",
+        "report": markdown,
+    }

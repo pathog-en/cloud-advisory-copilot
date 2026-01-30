@@ -1,0 +1,63 @@
+# Cloud Advisory Report
+
+## Executive Summary
+This assessment evaluates the current workload against cost, security, reliability,
+performance, and operational best practices.
+
+**Overall posture:**
+- Security: {{ scores.security }}/100
+- Reliability: {{ scores.reliability }}/100
+- Cost: {{ scores.cost }}/100
+- Performance: {{ scores.performance }}/100
+- Operations: {{ scores.operations }}/100
+
+{% if scores.security < 70 or scores.reliability < 70 %}
+⚠️ **Immediate attention recommended** in one or more critical areas.
+{% else %}
+✅ **No critical blockers identified**, but optimization opportunities exist.
+{% endif %}
+
+---
+
+## Workload Overview
+- Workload type: {{ input.workload_type }}
+- Environment: {{ input.environment }}
+- Traffic profile: {{ input.traffic_profile }}
+- Availability target: {{ input.availability_target }}
+- Data sensitivity: {{ input.data_sensitivity }}
+
+---
+
+## Key Recommendations
+{% for r in recommendations %}
+### {{ r.id }} — {{ r.title }}
+**Priority:** {{ r.priority }}  
+**Category:** {{ r.category }}
+
+**Recommendation:**  
+{{ r.recommendation }}
+
+**Rationale:**  
+{{ r.rationale }}
+
+{% if r.tradeoffs %}
+**Tradeoffs:**
+{% for t in r.tradeoffs %}
+- {{ t }}
+{% endfor %}
+{% endif %}
+
+---
+{% endfor %}
+
+## Advisory Notes
+- Higher reliability and security typically increase operational complexity.
+- Cost reductions may introduce performance or resilience tradeoffs.
+- Recommendations are cloud-agnostic and should be mapped to provider-native services.
+
+---
+
+## Next Steps
+1. Address all **P0** recommendations first.
+2. Review score tradeoffs with stakeholders.
+3. Re-run assessment after changes to validate improvements.
