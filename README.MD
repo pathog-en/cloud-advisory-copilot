@@ -10,12 +10,13 @@ A FastAPI-based advisory service that takes a workload intake form and returns a
  
  - Day 4 adds in rule matching, what should be done/actions taken when scores are produced, how the scores change.  Assessments get rendered as a markdown file.
 
-## Run locally
-```bash
+## Run locally (Windows PowerShell)
+
 python -m venv .venv
-# Windows PowerShell:
-. .venv\Scripts\Activate.ps1
-pip install - requirements.txt
-uvicorn app.main:app --reload#   c l o u d - a d v i s o r y - c o p i l o t 
+. .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python -m uvicorn app.main:app
+
  
  
