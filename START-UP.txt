@@ -1,0 +1,8 @@
+CHECK FIRST IF ONLINE:
+
+- curl http://127.0.0.1:8000/health
+
+IF NOT, RUN:
+
+- python -m uvicorn app.main:app
+
