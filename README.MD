@@ -1,3 +1,7 @@
+![CI](https://github.com/pathog-en/cloud-advisory-copilot/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11+-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 # Cloud Advisory Copilot (Cloud-Agnostic)
 
 A FastAPI-based advisory service that takes a workload intake form and returns a scorecard + prioritized recommendations.
@@ -18,5 +22,6 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 python -m uvicorn app.main:app
 
- 
- 
+
+## Architecture Overview
+ ![Architecture Diagram](docs/architecture.png)
