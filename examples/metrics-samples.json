@@ -1,0 +1,16 @@
+{
+  "service": "checkout-api",
+  "window": "30m",
+  "metrics": {
+    "availability_percent": 99.2,
+    "p95_latency_ms": 480,
+    "error_rate_percent": 2.1,
+    "cpu_utilization_percent": 82,
+    "memory_utilization_percent": 76
+  },
+  "slos": {
+    "availability_percent": 99.9,
+    "p95_latency_ms": 300,
+    "error_rate_percent": 1.0
+  }
+}
