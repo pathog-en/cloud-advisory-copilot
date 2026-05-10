@@ -6,24 +6,32 @@
 # This script validates more than basic availability. It checks:
 # 1. Required test payload exists
 # 2. /health endpoint is reachable
-# 3. /assess endpoint accepts a known-good workload
-# 4. Response includes all expected score fields
-# 5. Response includes recommendations
-# 6. Rules engine reports loaded rules
-# 7. Health and assess response times are captured
+# 3. /health latency is within threshold
+# 4. /assess endpoint accepts a known-good workload
+# 5. /assess latency is within threshold
+# 6. Response includes all expected score fields
+# 7. Response includes recommendations
+# 8. Rules engine reports loaded rules
 #
 # Exit codes:
 # 0 = PASS
 # 1 = FAIL
-#
-# This makes the script usable locally and in CI/CD systems such as GitHub Actions.
 
 $ErrorActionPreference = "Stop"
+
+# -------------------------------
+# Config
+# -------------------------------
 
 $BaseUrl = "http://127.0.0.1:8000"
 $HealthUrl = "$BaseUrl/health"
 $AssessUrl = "$BaseUrl/assess"
 $PayloadPath = "examples/sample-workload.json"
+
+# Latency thresholds in milliseconds
+# Tune these as the project matures.
+$HealthThresholdMs = 500
+$AssessThresholdMs = 1000
 
 $OverallStart = Get-Date
 
@@ -42,9 +50,12 @@ function Fail-Check {
         [string]$Message
     )
 
+    Write-Host ""
     Write-Host "FAIL: $Message" -ForegroundColor Red
     Write-Host ""
-    Write-Host "Daily SRE Check Result: FAIL" -ForegroundColor Red
+    Write-Host "========================================"
+    Write-Host " Daily SRE Check Result: FAIL" -ForegroundColor Red
+    Write-Host "========================================"
     Write-Host ""
     exit 1
 }
@@ -87,15 +98,20 @@ try {
         $HealthResponse | ConvertTo-Json -Depth 10
         Fail-Check "/health responded, but status was not ok."
     }
+
+    if ($HealthDurationMs -gt $HealthThresholdMs) {
+        Fail-Check "/health latency too high: $HealthDurationMs ms exceeds threshold of $HealthThresholdMs ms"
+    }
 }
 catch {
     Write-Host "Could not reach /health endpoint."
     Write-Host "Is the API running with the command below?"
     Write-Host ""
-    Write-Host "python -m uvicorn app.main:app --reload"
+    Write-Host "python -m uvicorn app.main:app"
     Write-Host ""
     Write-Host "Error:"
     Write-Host $_.Exception.Message
+
     Fail-Check "/health endpoint check failed."
 }
 
@@ -117,15 +133,20 @@ try {
 
     $AssessEnd = Get-Date
     $AssessDurationMs = [math]::Round(($AssessEnd - $AssessStart).TotalMilliseconds, 2)
+
+    Write-Host "PASS: /assess returned a response." -ForegroundColor Green
+    Write-Host "INFO: /assess response time: $AssessDurationMs ms"
+
+    if ($AssessDurationMs -gt $AssessThresholdMs) {
+        Fail-Check "/assess latency too high: $AssessDurationMs ms exceeds threshold of $AssessThresholdMs ms"
+    }
 }
 catch {
     Write-Host "Error:"
     Write-Host $_.Exception.Message
+
     Fail-Check "/assess request failed."
 }
-
-Write-Host "PASS: /assess returned a response." -ForegroundColor Green
-Write-Host "INFO: /assess response time: $AssessDurationMs ms"
 
 # -------------------------------
 # Check 4: Validate scores
@@ -196,6 +217,12 @@ foreach ($Rec in $AssessResponse.recommendations) {
 Write-Host ""
 Write-Host "Engine version: $($AssessResponse.meta.engine_version)"
 Write-Host "Rules loaded:   $($AssessResponse.meta.rules_loaded)"
+
+Write-Host ""
+Write-Host "Latency thresholds:"
+Write-Host "  /health threshold: $HealthThresholdMs ms"
+Write-Host "  /assess threshold: $AssessThresholdMs ms"
+
 Write-Host ""
 Write-Host "Timing:"
 Write-Host "  /health:      $HealthDurationMs ms"
