@@ -70,9 +70,11 @@ Client → FastAPI (/assess)
   ]
 }
 
+
+```
 ---
 
-# SRE Validation
+## SRE Validation
 
 This project includes a daily SRE validation script:
 
@@ -121,7 +123,7 @@ CI-based operational validation
 
 ---
 
-##Future Enhancements:
+## Future Enhancements:
 
 expanded rule library
 multi-workload test scenarios
