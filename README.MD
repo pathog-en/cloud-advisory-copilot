@@ -70,7 +70,9 @@ Client → FastAPI (/assess)
   ]
 }
 
-## SRE Validation
+---
+
+# SRE Validation
 
 This project includes a daily SRE validation script:
 
@@ -85,6 +87,8 @@ Example
 .\scripts\daily-sre-check.ps1
 CI/CD Integration
 
+---
+
 ## The SRE validation is integrated into GitHub Actions:
 
 Runs on every push
@@ -94,6 +98,8 @@ payload is invalid
 rules are missing
 latency exceeds thresholds
 Failure Testing
+
+---
 
 ## The system has been validated against multiple failure scenarios:
 
@@ -112,6 +118,8 @@ synthetic validation (not just health checks)
 service-level expectations (latency thresholds)
 failure-mode testing
 CI-based operational validation
+
+---
 
 ##Future Enhancements:
 
