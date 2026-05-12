@@ -72,7 +72,7 @@ Client → FastAPI (/assess)
 
 ---
 
-# SRE Validation
+## SRE Validation
 
 This project includes a daily SRE validation script:
 
@@ -121,7 +121,7 @@ CI-based operational validation
 
 ---
 
-##Future Enhancements:
+## Future Enhancements:
 
 expanded rule library
 multi-workload test scenarios
@@ -131,13 +131,13 @@ UI dashboard for advisory output
 
 ## Getting Started ##
 
-# Install dependencies
+## Install dependencies
 pip install -r requirements.txt
 
-# Run the API
+## Run the API
 python -m uvicorn app.main:app
 
-# Run SRE validation
+## Run SRE validation
 .\scripts\daily-sre-check.ps1
 
 ## Architecture Overview
