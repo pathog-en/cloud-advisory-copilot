@@ -1,0 +1,26 @@
+{
+  "workload_name": "batch-lowcost",
+  "workload_type": "batch",
+  "environment": "dev",
+  "traffic_profile": "low",
+  "cloud_provider": "aws",
+  "region": "us-east-2",
+  "architecture": {
+    "compute": "batch",
+    "database": "none",
+    "storage": "s3"
+  },
+  "availability": {
+    "multi_az": false,
+    "auto_scaling": false
+  },
+  "security": {
+    "waf_enabled": false,
+    "encryption_at_rest": true,
+    "encryption_in_transit": true
+  },
+  "cost": {
+    "reserved_instances": false,
+    "right_sizing": true
+  }
+}

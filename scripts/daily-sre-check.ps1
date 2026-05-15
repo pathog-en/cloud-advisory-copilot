@@ -26,7 +26,11 @@ $ErrorActionPreference = "Stop"
 $BaseUrl = "http://127.0.0.1:8000"
 $HealthUrl = "$BaseUrl/health"
 $AssessUrl = "$BaseUrl/assess"
-$PayloadPath = "examples/sample-workload.json"
+$PayloadPaths = @(
+    "examples/sample-workload.json",
+    "examples/requests/batch_lowcost.json",
+    "examples/requests/web_prod_highavail.json"
+)
 
 # Latency thresholds in milliseconds
 # Tune these as the project matures.
@@ -61,16 +65,18 @@ function Fail-Check {
 }
 
 # -------------------------------
-# Check 1: Confirm sample payload exists
+# Check 1: Confirm all workload files exist
 # -------------------------------
 
-Write-Host "[1/5] Checking for sample workload file..."
+Write-Host "[1/5] Checking for workload files..."
 
-if (-Not (Test-Path $PayloadPath)) {
-    Fail-Check "Sample workload file not found at $PayloadPath"
+foreach ($Path in $PayloadPaths) {
+    if (-Not (Test-Path $Path)) {
+        Fail-Check "Workload file not found: $Path"
+    }
 }
 
-Write-Host "PASS: Sample workload file found." -ForegroundColor Green
+Write-Host "PASS: All workload files found." -ForegroundColor Green
 
 # -------------------------------
 # Check 2: Health endpoint
@@ -120,32 +126,45 @@ catch {
 # -------------------------------
 
 Write-Host ""
-Write-Host "[3/5] Checking /assess endpoint with sample workload..."
+Write-Host "[3/5] Checking /assess endpoint across workloads..."
 
-try {
-    $AssessStart = Get-Date
+foreach ($PayloadPath in $PayloadPaths) {
 
-    $AssessResponse = Invoke-RestMethod `
-        -Uri $AssessUrl `
-        -Method POST `
-        -Headers @{ "Content-Type" = "application/json" } `
-        -InFile $PayloadPath
+    Write-Host ""
+    Write-Host "Testing workload: $PayloadPath"
 
-    $AssessEnd = Get-Date
-    $AssessDurationMs = [math]::Round(($AssessEnd - $AssessStart).TotalMilliseconds, 2)
+    try {
+        $AssessStart = Get-Date
 
-    Write-Host "PASS: /assess returned a response." -ForegroundColor Green
-    Write-Host "INFO: /assess response time: $AssessDurationMs ms"
+        $AssessResponse = Invoke-RestMethod `
+            -Uri $AssessUrl `
+            -Method POST `
+            -Headers @{ "Content-Type" = "application/json" } `
+            -InFile $PayloadPath
 
-    if ($AssessDurationMs -gt $AssessThresholdMs) {
-        Fail-Check "/assess latency too high: $AssessDurationMs ms exceeds threshold of $AssessThresholdMs ms"
+        $AssessEnd = Get-Date
+        $AssessDurationMs = [math]::Round(($AssessEnd - $AssessStart).TotalMilliseconds, 2)
+
+        Write-Host "PASS: /assess returned a response." -ForegroundColor Green
+        Write-Host "INFO: Response time: $AssessDurationMs ms"
+
+        if ($AssessDurationMs -gt $AssessThresholdMs) {
+            Fail-Check "$PayloadPath latency too high: $AssessDurationMs ms"
+        }
+
+        # Validate output
+        if ($null -eq $AssessResponse.scores) {
+            Fail-Check "$PayloadPath missing scores"
+        }
+
+        if ($null -eq $AssessResponse.recommendations -or $AssessResponse.recommendations.Count -eq 0) {
+            Fail-Check "$PayloadPath returned no recommendations"
+        }
+
     }
-}
-catch {
-    Write-Host "Error:"
-    Write-Host $_.Exception.Message
-
-    Fail-Check "/assess request failed."
+    catch {
+        Fail-Check "$PayloadPath failed: $($_.Exception.Message)"
+    }
 }
 
 # -------------------------------

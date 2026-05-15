@@ -1,0 +1,26 @@
+{
+  "workload_name": "web-prod-highavail",
+  "workload_type": "web_api",
+  "environment": "prod",
+  "traffic_profile": "high",
+  "cloud_provider": "aws",
+  "region": "us-east-2",
+  "architecture": {
+    "compute": "containers",
+    "database": "managed_postgres",
+    "storage": "s3"
+  },
+  "availability": {
+    "multi_az": true,
+    "auto_scaling": true
+  },
+  "security": {
+    "waf_enabled": true,
+    "encryption_at_rest": true,
+    "encryption_in_transit": true
+  },
+  "cost": {
+    "reserved_instances": false,
+    "right_sizing": true
+  }
+}
