@@ -26,10 +26,6 @@ def baseline_scores() -> Scorecard:
 def health():
     return {"status": "ok"}
 
-@router.get("/metrics")
-def metrics():
-    return {"status": "ok"}
-
 
 @router.get("/rules")
 def rules():
