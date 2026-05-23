@@ -144,3 +144,35 @@ python -m uvicorn app.main:app
 
 ## Architecture Overview
  ![Architecture Diagram](docs/architecture.png)
+
+## Run Locally
+
+```bash
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8001
+
+curl http://127.0.0.1:8001/health
+
+
+---
+
+## ▶️ Step 2: Add “Known Issues”
+
+Example:
+
+```md
+## Known Issues
+
+- Port 8001 may be blocked on Windows (WinError 10013)
+- /metrics may return 404 if Prometheus instrumentator is not initialized## Troubleshooting
+
+### Health check fails
+- Ensure app is running
+- Confirm correct port
+
+### Metrics not working
+- Check /metrics endpoint
+- Verify Prometheus target is UP
+
+### Script fails
+- Review which step failed in output
