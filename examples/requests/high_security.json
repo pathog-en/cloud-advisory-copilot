@@ -1,0 +1,9 @@
+{
+  "workload_type": "web",
+  "environment": "prod",
+  "traffic_profile": "medium",
+  "availability_target": "high",
+  "data_sensitivity": "confidential",
+  "budget_priority": "balanced",
+  "team_experience": "low"
+}
