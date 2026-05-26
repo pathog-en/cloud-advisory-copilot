@@ -1,9 +1,9 @@
 {
-  "workload_type": "web",
+  "workload_type": "web_api",
   "environment": "prod",
   "traffic_profile": "medium",
   "availability_target": "high",
   "data_sensitivity": "confidential",
   "budget_priority": "balanced",
-  "team_experience": "low"
+  "team_experience": "junior"
 }

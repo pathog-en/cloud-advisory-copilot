@@ -33,7 +33,7 @@ $PayloadPaths = @(
 )
 
 # Latency thresholds in milliseconds
-# Tune these as the project matures.
+
 $HealthThresholdMs = 500
 $AssessThresholdMs = 1000
 

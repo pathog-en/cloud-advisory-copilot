@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter
 from .schemas import AssessmentRequest, AssessmentResponse, Scorecard
 
@@ -24,6 +26,7 @@ def baseline_scores() -> Scorecard:
 
 @router.get("/health")
 def health():
+    print("Health endpoint hit", flush=True)
     return {"status": "ok"}
 
 
@@ -47,6 +50,9 @@ def rules():
 
 @router.post("/assess", response_model=AssessmentResponse)
 def assess(request: AssessmentRequest) -> AssessmentResponse:
+    start = time.time()
+    print("Assess endpoint hit")
+
     rules = load_rules()
     baseline = baseline_scores()
 
@@ -62,6 +68,9 @@ def assess(request: AssessmentRequest) -> AssessmentResponse:
         isinstance(request.provider_hints, dict)
         and request.provider_hints.get("trace") is True
     )
+
+    duration = time.time() - start
+    print(f"Assess completed in {duration:.3f}s")
 
     return AssessmentResponse(
         normalized_input=request,
