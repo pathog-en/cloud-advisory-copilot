@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import time
+import logging
 
 from fastapi import APIRouter
-from .schemas import AssessmentRequest, AssessmentResponse, Scorecard
+from prometheus_client import Counter, Histogram
 
+from .schemas import AssessmentRequest, AssessmentResponse, Scorecard
 from app.rules.loader import load_rules
 from app.core.engine import apply_rules_with_scoring
 from app.core.reporting import generate_markdown_report
@@ -12,9 +14,30 @@ from app.core.reporting import generate_markdown_report
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
+ASSESS_REQUESTS_TOTAL = Counter(
+    "cloud_advisory_assess_requests_total",
+    "Total number of /assess requests",
+)
+
+ASSESS_LATENCY_SECONDS = Histogram(
+    "cloud_advisory_assess_latency_seconds",
+    "Latency for /assess requests in seconds",
+)
+
+REPORT_REQUESTS_TOTAL = Counter(
+    "cloud_advisory_report_requests_total",
+    "Total number of /report requests",
+)
+
+REPORT_LATENCY_SECONDS = Histogram(
+    "cloud_advisory_report_latency_seconds",
+    "Latency for /report requests in seconds",
+)
+
 
 def baseline_scores() -> Scorecard:
-    # Day 3: baseline + rule-driven deltas
     return Scorecard(
         cost=70,
         security=70,
@@ -26,7 +49,7 @@ def baseline_scores() -> Scorecard:
 
 @router.get("/health")
 def health():
-    print("Health endpoint hit", flush=True)
+    logger.info("Health endpoint hit")
     return {"status": "ok"}
 
 
@@ -50,27 +73,29 @@ def rules():
 
 @router.post("/assess", response_model=AssessmentResponse)
 def assess(request: AssessmentRequest) -> AssessmentResponse:
+    ASSESS_REQUESTS_TOTAL.inc()
     start = time.time()
-    print("Assess endpoint hit")
+
+    logger.info("Assess endpoint hit")
 
     rules = load_rules()
     baseline = baseline_scores()
 
-    # 🔑 Day 3 engine call (THIS is where Step 5.1 is used)
     recs, updated_scores, trace = apply_rules_with_scoring(
         request,
         rules,
         baseline,
     )
 
-    # Trace is opt-in (keeps default response clean)
     include_trace = (
         isinstance(request.provider_hints, dict)
         and request.provider_hints.get("trace") is True
     )
 
     duration = time.time() - start
-    print(f"Assess completed in {duration:.3f}s")
+    ASSESS_LATENCY_SECONDS.observe(duration)
+
+    logger.info("Assess completed in %.3fs", duration)
 
     return AssessmentResponse(
         normalized_input=request,
@@ -85,8 +110,14 @@ def assess(request: AssessmentRequest) -> AssessmentResponse:
         trace=trace if include_trace else None,
     )
 
+
 @router.post("/report")
 def report(request: AssessmentRequest):
+    REPORT_REQUESTS_TOTAL.inc()
+    start = time.time()
+
+    logger.info("Report endpoint hit")
+
     rules = load_rules()
     baseline = baseline_scores()
 
@@ -101,6 +132,11 @@ def report(request: AssessmentRequest):
         scores=updated_scores,
         recommendations=recs,
     )
+
+    duration = time.time() - start
+    REPORT_LATENCY_SECONDS.observe(duration)
+
+    logger.info("Report completed in %.3fs", duration)
 
     return {
         "format": "markdown",
