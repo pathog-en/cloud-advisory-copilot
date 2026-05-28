@@ -23,7 +23,7 @@ $ErrorActionPreference = "Stop"
 # Config
 # -------------------------------
 
-$BaseUrl = "http://127.0.0.1:8000"
+$BaseUrl = "http://127.0.0.1:8001"
 $HealthUrl = "$BaseUrl/health"
 $AssessUrl = "$BaseUrl/assess"
 $PayloadPaths = @(
