@@ -78,58 +78,58 @@ Client → FastAPI (/assess)
 
 This project includes a daily SRE validation script:
 
-scripts/daily-sre-check.ps1
-What it checks
-API availability (/health)
-Functional correctness (/assess)
-Output completeness (scores + recommendations)
-Rules engine integrity (rules loaded)
-Performance (latency thresholds)
-Example
-.\scripts\daily-sre-check.ps1
+- scripts/daily-sre-check.ps1
+- What it checks
+    - API availability (/health)
+    - Functional correctness (/assess)
+    - Output completeness (scores + recommendations)
+    - Rules engine integrity (rules loaded)
+    - Performance (latency thresholds)
+- Example
+    - .\scripts\daily-sre-check.ps1
+
 CI/CD Integration
 
 ---
 
 ## The SRE validation is integrated into GitHub Actions:
 
-Runs on every push
-Fails if:
-API is unreachable
-payload is invalid
-rules are missing
-latency exceeds thresholds
-Failure Testing
+- Runs on every push
+- Fails if:
+  - API is unreachable
+  - payload is invalid
+  - rules are missing
+  - latency exceeds thresholds
+  - Failure Testing
 
 ---
 
 ## The system has been validated against multiple failure scenarios:
 
-service outage
-missing input file
-invalid API payload
-latency degradation
-missing rules engine
-Cloud Engineering Principles
-Standardized workload modeling
-Separation of concerns (API, rules engine, config)
-Configuration-driven logic (YAML rules)
-Cloud-agnostic evaluation model
-SRE / Platform Engineering Concepts
-synthetic validation (not just health checks)
-service-level expectations (latency thresholds)
-failure-mode testing
-CI-based operational validation
+- service outage
+- missing input file
+- invalid API payload
+- latency degradation
+- missing rules engine
+- Cloud Engineering Principles
+- Standardized workload modeling
+- Separation of concerns (API, rules engine, config)
+- Configuration-driven logic (YAML rules)
+- Cloud-agnostic evaluation model SRE / Platform Engineering Concepts
+- synthetic validation (not just health checks)
+- service-level expectations (latency thresholds)
+- failure-mode testing
+- CI-based operational validation
 
 ---
 
 ## Future Enhancements:
 
-expanded rule library
-multi-workload test scenarios
-historical scoring + trend analysis
-integration with real cloud environments
-UI dashboard for advisory output
+- expanded rule library
+- multi-workload test scenarios
+- historical scoring + trend analysis
+- integration with real cloud environments
+- UI dashboard for advisory output
 
 ## Getting Started ##
 
