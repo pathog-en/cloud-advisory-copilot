@@ -10,7 +10,7 @@ from .schemas import AssessmentRequest, AssessmentResponse, Scorecard
 from app.rules.loader import load_rules
 from app.core.engine import apply_rules_with_scoring
 from app.core.reporting import generate_markdown_report
-
+from app.core.explainer import build_score_explanation
 
 router = APIRouter()
 
@@ -110,6 +110,35 @@ def assess(request: AssessmentRequest) -> AssessmentResponse:
         trace=trace if include_trace else None,
     )
 
+
+@router.post("/explain")
+def explain(request: AssessmentRequest):
+    rules = load_rules()
+    baseline = baseline_scores()
+
+    recs, updated_scores, trace = apply_rules_with_scoring(
+        request,
+        rules,
+        baseline,
+    )
+
+    explanation = build_score_explanation(
+        scores=updated_scores.model_dump(),
+        trace=trace,
+    )
+
+    return {
+        "normalized_input": request,
+        "summary": explanation["summary"],
+        "scores": explanation["scores"],
+        "explanations": explanation["explanations"],
+        "recommendations": recs,
+        "meta": {
+            "engine_version": "0.4.0-explainability",
+            "rules_loaded": len(rules),
+            "purpose": "plain_english_decision_explanation",
+        },
+    }
 
 @router.post("/report")
 def report(request: AssessmentRequest):
