@@ -1,178 +1,187 @@
 # Cloud Advisory Copilot
 
-## Overview
+**A cloud-agnostic, rules-based workload assessment API built with Python and FastAPI.**
 
-Cloud Advisory Copilot is a FastAPI-based service that evaluates cloud workloads and provides structured recommendations across key domains:
+Cloud Advisory Copilot evaluates workload requirements across five architecture domains—**cost, security, reliability, performance, and operations**—and returns structured scores, prioritized recommendations, and explanations. It also demonstrates operational validation through GitHub Actions, synthetic API checks, and Prometheus-compatible metrics.
 
-- Cost
-- Security
-- Reliability
-- Performance
-- Operations
+> **Project scope:** This is an engineering portfolio project and a deterministic advisory engine, not an AI/LLM service or a live scanner of AWS, Azure, or GCP accounts. Assessments are based on supplied workload inputs and versioned YAML rules.
 
-The system transforms cloud best practices into a **repeatable, rules-based advisory engine**.
+## What this project demonstrates
 
----
-
-## Problem
-
-Cloud teams often understand best practices, but struggle to consistently apply them across workloads.
-
-This leads to:
-
-- inconsistent architecture decisions
-- missed security controls
-- inefficient cost management
-- lack of standardized evaluation
-
----
-
-## Solution
-
-This project provides:
-
-- a standardized workload input schema
-- a rules-based evaluation engine (YAML-driven)
-- a scoring system across cloud domains
-- prioritized recommendations
-
----
+- **API engineering:** Request validation and structured responses using FastAPI and Pydantic.
+- **Configuration-driven decisions:** YAML rules evaluated against workload metadata rather than hard-coded advice in individual routes.
+- **Explainability:** Optional assessment traces and an endpoint that describes score changes.
+- **Software quality:** Pytest coverage and GitHub Actions CI.
+- **Site reliability practices:** Scripted availability, functional-output, and latency checks that can fail a CI job.
+- **Observability:** Prometheus metrics endpoints with optional local Prometheus and Grafana services.
 
 ## Architecture
 
+![Cloud Advisory Copilot architecture](docs/architecture.png)
 
-Client → FastAPI (/assess)
-→ Input normalization
-→ Rules engine (YAML)
-→ Scoring + recommendations
-→ JSON response
+```mermaid
+flowchart LR
+    C[Client or test payload] --> A[FastAPI endpoints]
+    A --> V[Pydantic validation]
+    V --> E[Rules and scoring engine]
+    Y[YAML rules] --> E
+    E --> R[Scores, recommendations and trace]
+    R --> A
+    A --> M[Prometheus metrics]
+    M --> P[Prometheus]
+    P --> G[Grafana]
+    CI[GitHub Actions] --> T[Pytest + synthetic SRE checks]
+    T --> A
+```
 
+### Assessment flow
 
----
+1. A client submits workload details, such as environment, traffic profile, availability target, and data sensitivity.
+2. Pydantic validates and normalizes the input.
+3. The rules engine loads the rules from `rules/*.yaml`, evaluates matching conditions, and adjusts baseline scores.
+4. The API returns five domain scores (0–100), prioritized recommendations, and optional decision traces.
 
-## Example Response
+The engine uses transparent, configurable rules. It does not make changes to cloud resources.
+
+## API endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/health` | Basic service health response |
+| `GET` | `/rules` | List loaded advisory rules |
+| `POST` | `/assess` | Evaluate a workload and return scores and recommendations |
+| `POST` | `/explain` | Return a plain-language explanation of scoring decisions |
+| `POST` | `/report` | Generate a Markdown assessment report returned in JSON |
+| `GET` | `/metrics` | Expose Prometheus-compatible application metrics |
+| `GET` | `/docs` | Interactive OpenAPI documentation provided by FastAPI |
+
+### Example assessment input
 
 ```json
 {
-  "scores": {
-    "cost": 70,
-    "security": 84,
-    "reliability": 70,
-    "performance": 70,
-    "operations": 70
-  },
-  "recommendations": [
-    {
-      "id": "SEC-002",
-      "priority": "P0",
-      "title": "Encrypt data in transit and at rest"
-    }
-  ]
+  "workload_type": "web_api",
+  "environment": "prod",
+  "traffic_profile": "medium",
+  "availability_target": "high",
+  "data_sensitivity": "confidential",
+  "budget_priority": "balanced",
+  "team_experience": "junior",
+  "provider_hints": {"trace": true}
 }
-
-
 ```
----
 
-## SRE Validation
+The `/assess` response contains `normalized_input`, `scores`, `recommendations`, and `meta`. It also includes `trace` when requested through `provider_hints.trace`.
 
-This project includes a daily SRE validation script:
+## Run locally
 
-- scripts/daily-sre-check.ps1
-- What it checks
-    - API availability (/health)
-    - Functional correctness (/assess)
-    - Output completeness (scores + recommendations)
-    - Rules engine integrity (rules loaded)
-    - Performance (latency thresholds)
-- Example
-    - .\scripts\daily-sre-check.ps1
+**Prerequisites:** Python 3.11 (used by CI), pip, and PowerShell for the SRE script. Docker is optional for Prometheus and Grafana.
 
-CI/CD Integration
+Run from the repository root in PowerShell:
 
----
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
 
-## The SRE validation is integrated into GitHub Actions:
+With the API running, open another terminal and try:
 
-- Runs on every push
-- Fails if:
-  - API is unreachable
-  - payload is invalid
-  - rules are missing
-  - latency exceeds thresholds
-  - Failure Testing
+```powershell
+curl.exe http://127.0.0.1:8000/health
+curl.exe http://127.0.0.1:8000/rules
+curl.exe -X POST http://127.0.0.1:8000/assess `
+  -H "Content-Type: application/json" `
+  --data-binary "@examples/requests/high_security.json"
+```
 
----
+Interactive API docs are available at `http://127.0.0.1:8000/docs`.
 
-## The system has been validated against multiple failure scenarios:
+## Testing and CI
 
-- service outage
-- missing input file
-- invalid API payload
-- latency degradation
-- missing rules engine
-- Cloud Engineering Principles
-- Standardized workload modeling
-- Separation of concerns (API, rules engine, config)
-- Configuration-driven logic (YAML rules)
-- Cloud-agnostic evaluation model SRE / Platform Engineering Concepts
-- synthetic validation (not just health checks)
-- service-level expectations (latency thresholds)
-- failure-mode testing
-- CI-based operational validation
+### Automated tests
 
----
+```powershell
+python -m pytest -q
+```
 
-## Future Enhancements:
+The repository includes tests for API endpoints, rule loading, score calculations, and score boundaries.
 
-- expanded rule library
-- multi-workload test scenarios
-- historical scoring + trend analysis
-- integration with real cloud environments
-- UI dashboard for advisory output
+### GitHub Actions
 
-## Getting Started ##
+- `.github/workflows/ci.yml` runs the Python tests on pushes and pull requests.
+- `.github/workflows/sre-check.yml` launches the FastAPI service and runs the PowerShell validation script on pushes and pull requests to `main` (also supports manual runs).
 
-## Install dependencies
-pip install -r requirements.txt
+These workflows provide repeatable quality and operational checks, but do not represent a continuously deployed production service.
 
-## Run the API
-python -m uvicorn app.main:app
+### Synthetic SRE validation
 
-## Run SRE validation
+With the API running on `127.0.0.1:8000`:
+
+```powershell
 .\scripts\daily-sre-check.ps1
+```
 
-## Architecture Overview
- ![Architecture Diagram](docs/architecture.png)
+The script checks that required example inputs exist, verifies `/health`, exercises `/assess` against multiple workloads, checks response fields and rule availability, and enforces configured latency thresholds. It exits nonzero when a check fails.
 
-## Run Locally
+The thresholds in the script are **500 ms for `/health`** and **1,000 ms for `/assess`** per request. These are demonstration check thresholds, not a measured production SLO.
 
-```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
+## Observability
 
-curl http://127.0.0.1:8001/health
+The API exports metrics at `/metrics`, including request-level instrumentation and custom counters/latency histograms for assessment and report calls.
 
+To run the optional monitoring stack:
 
----
+```powershell
+docker compose -f docker-compose.observability.yml up -d
+```
 
-## ▶️ Step 2: Add “Known Issues”
+- **Prometheus:** `http://localhost:9090`
+- **Grafana:** `http://localhost:3000`
 
-Example:
+The included Prometheus configuration scrapes `host.docker.internal:8000`. For a local Docker Desktop monitoring demo, launch the API with `--host 0.0.0.0 --port 8000` if containers cannot reach the loopback-only listener. Only do this on a trusted development machine/network: the API does not implement authentication. Keep `127.0.0.1` for API-only local testing.
 
-```md
-## Known Issues
+Configure Prometheus as a Grafana data source if you want to explore dashboards; no prebuilt Grafana dashboard is claimed by this repository.
 
-- Port 8001 may be blocked on Windows (WinError 10013)
-- /metrics may return 404 if Prometheus instrumentator is not initialized## Troubleshooting
+To stop the monitoring stack:
 
-### Health check fails
-- Ensure app is running
-- Confirm correct port
+```powershell
+docker compose -f docker-compose.observability.yml down
+```
 
-### Metrics not working
-- Check /metrics endpoint
-- Verify Prometheus target is UP
+## Repository guide
 
-### Script fails
-- Review which step failed in output
+```text
+app/
+  api/          FastAPI routes and Pydantic request/response models
+  core/         Rules, scoring, explanation, and reporting logic
+  rules/        YAML loading and rule schemas
+  sre/          Separate SLO-evaluation example
+rules/          Configurable advisory rule sets
+examples/       Example workload inputs and sample outputs
+scripts/        PowerShell SRE validation script
+tests/          Automated Python tests
+observability/  Prometheus scrape configuration
+.github/workflows/  CI and SRE-check workflows
+docs/           Architecture diagram
+```
+
+## Design choices and limitations
+
+- **Cloud-agnostic by design:** Inputs describe workload requirements instead of reading provider inventories. There are no live AWS/Azure/GCP integrations.
+- **Deterministic recommendations:** Rule matches and score deltas are inspectable. Results are advisory and depend on rule coverage and input accuracy.
+- **Separate health and functional checks:** A passing `/health` response alone does not demonstrate that `/assess` works; the SRE script tests both.
+- **Local-first reproducibility:** The application can be reviewed and tested without provisioning cloud infrastructure.
+- **Demo rather than production service:** Authentication, authorization, managed hosting, and operational hardening would need further work before deploying for untrusted users.
+
+## Possible next steps
+
+- Expand rule coverage and test cases.
+- Add historical assessment comparisons and trends.
+- Introduce authentication and authorization before exposing the service publicly.
+- Add provider-specific integrations as optional, explicitly scoped modules.
+- Provide reproducible Grafana dashboard provisioning and additional SLO reporting.
+
+## Project takeaway
+
+The core lesson is that cloud advice becomes more useful when decisions are **repeatable, explainable, testable, and observable**. This project brings those practices together in a small, reviewable Python service.
